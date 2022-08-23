@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=aarctic
+GenericName=Dictionary
+Comment=Simplistic desktop client for Aard2
+Exec=aarctic
+Icon=aarctic
+Terminal=false
+Type=Application
+Categories=Education;

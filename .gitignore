@@ -1,0 +1,8 @@
+src/aarctic/__pycache__/
+src/aarctic.egg-info/
+src/aarctic.dist-info/
+build/
+*.log
+linux/
+main.spec
+

@@ -1,16 +1,25 @@
 import json
 import threading
+import urllib.request
+import urllib.error
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QUrl, QSettings, QCoreApplication
 #from PyQt5.QtWebKit import QWebSettings
 #from PyQt5.QtWebEngineWidgets import QWebEngineView
-import requests
 import aarctic.utils as utils
 import aarctic.server as server
 
 port = 7036 if utils.debug else utils.find_free_port()
 address = f"http://{utils.INTERFACE}:{port}"
+
+
+def get_data(url):
+    response = urllib.request.urlopen(url)
+    string = response.read().decode('utf-8')
+    data = json.loads(string)
+    return data
+
 
 class WordListEntry(QWidget):
     __slots__ = ['entry', 'd']
@@ -32,8 +41,8 @@ class About(QWidget):
                 "No dictionaries detected. Please set a valid folder in settings")
             return
         try:
-            data = requests.get(f"{address}/slob").json()
-        except requests.exceptions.ConnectionError:
+            data = get_data(f"{address}/slob")
+        except urllib.error.URLError:
             self.dictInfoView.setText(
                 "ERROR: Could not communicate with local server")
         except json.decoder.JSONDecodeError:
@@ -50,6 +59,8 @@ class About(QWidget):
         QWidget.__init__(self)
         uic.loadUi(utils.uifile("about.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.buttonBox.button(QDialogButtonBox.Close).setDefault(True)
+        self.buttonBox.button(QDialogButtonBox.Close).setFocus()
         self.buttonBox.rejected.connect(self.close)
         self.get_dict_info()
 
@@ -104,18 +115,17 @@ class MainWindow(QWidget):
         self.current_index = 0
         query = self.queryEdit.text()
         has_dicts = bool(utils.get_dicts(self.settings_dir))
+        if not has_dicts:
+            QMessageBox.warning(
+                self, "Warning", "No dictionaries found. Please set a valid folder in settings")
+            return
         if not query:
             QMessageBox.warning(
                 self, "Warning", "Please enter something valid")
             return
-        if not has_dicts:
-            QMessageBox.warning(
-                self, "Warning", "No dictionaries detected. Please set a valid folder in settings")
-            return
         try:
-            data = requests.get(f"{address}/lookup",
-                                params={'word': query}).json()
-        except requests.exceptions.ConnectionError:
+            data = get_data(f"{address}/lookup?word={query}")
+        except urllib.error.URLError:
             QMessageBox.critical(
                 self, "Error", "Could not communicate with local server")
         except json.decoder.JSONDecodeError:
@@ -135,7 +145,7 @@ class MainWindow(QWidget):
                     self.wordList.addItem(item)
                     row = WordListEntry(i['key'], i['source'])
                     item.setSizeHint(row.minimumSizeHint())
-                    item.setToolTip(f"From: {i['source']}")
+                    item.setToolTip(f"\"{i['key']}\" from {i['source']}")
                     self.wordList.setItemWidget(item, row)
                     self.wordLinks.append(i['link'])
 
@@ -170,6 +180,7 @@ class MainWindow(QWidget):
         self.settings_dir = self.settings.value("directory")
         self.settings_limit = int(self.settings.value("limit", 100))
 
+
 def main():
     app = QApplication([])
     app.setQuitOnLastWindowClosed(True)
@@ -179,5 +190,7 @@ def main():
     mainwindow.show()
     mainwindow.init_server()
     app.exec()
+
+
 if __name__ == '__main__':
     main()

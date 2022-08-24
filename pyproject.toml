@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "pyqt5==5.15.7",
-    "cherrypy",
+    "bottle",
     "Slob @ git+https://github.com/itkach/slob.git@master",
     "requests",
     "importlib_resources"
@@ -42,34 +42,33 @@ where = ["src"]
 [tool.setuptools.dynamic]
 version = {attr = "aarctic.__version__"}
 
-[tool.briefcase]
-project_name = "aarctic"
-bundle = "me.aisuneko.aarctic"
-version = "1.0"
-url = "https://github.com/aisuneko/aarctic"
-license = "MIT License"
-author = 'aisuneko'
-author_email = "iceneko@protonmail.ch"
+# [tool.briefcase]
+# project_name = "aarctic"
+# bundle = "me.aisuneko.aarctic"
+# version = "1.0"
+# url = "https://github.com/aisuneko/aarctic"
+# license = "MIT License"
+# author = 'aisuneko'
+# author_email = "iceneko@protonmail.ch"
 
-[tool.briefcase.app.aarctic]
-formal_name = "aarctic"
-description = "Simplistic desktop client for Aard2"
-icon = "src/aarctic/sprites/icon" 
-sources = ['src/aarctic']
-requires = ['pyqt5==5.15.7',
-            'cherrypy',
-            'importlib_resources',
-            'requests',
-            'Slob @ git+https://github.com/itkach/slob.git@master',
-            '.']
+# [tool.briefcase.app.aarctic]
+# formal_name = "aarctic"
+# description = "Simplistic desktop client for Aard2"
+# icon = "src/aarctic/sprites/icon" 
+# sources = ['src/aarctic']
+# requires = ['cherrypy',
+#             'importlib_resources',
+#             'requests',
+#             'Slob @ git+https://github.com/itkach/slob.git@master',
+#             '.']
 
 
-[tool.briefcase.app.aarctic.macOS]
-requires = []
+# [tool.briefcase.app.aarctic.macOS]
+# requires = []
 
-[tool.briefcase.app.aarctic.linux]
-requires = []
-system_requires = []
+# [tool.briefcase.app.aarctic.linux]
+# requires = []
+# system_requires = []
 
-[tool.briefcase.app.aarctic.windows]
-requires = []
+# [tool.briefcase.app.aarctic.windows]
+# requires = []

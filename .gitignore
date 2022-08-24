@@ -5,4 +5,5 @@ build/
 *.log
 linux/
 main.spec
-
+src/test_dict/
+core

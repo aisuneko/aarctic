@@ -3,11 +3,11 @@ import threading
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QUrl, QSettings, QCoreApplication
+#from PyQt5.QtWebKit import QWebSettings
 #from PyQt5.QtWebEngineWidgets import QWebEngineView
 import requests
 import aarctic.utils as utils
 import aarctic.server as server
-
 
 port = 7036 if utils.debug else utils.find_free_port()
 address = f"http://{utils.INTERFACE}:{port}"
@@ -66,28 +66,28 @@ class Settings(QWidget):
         self.aboutWindow.show()
 
     def save(self):
-        limit = self.limitEdit.value()
-        directory = self.dirEdit.text()
-        self.settings.setValue("limit", limit)
-        self.settings.setValue("directory", directory)
+        self.settings.setValue("limit", self.limitEdit.value())
+        self.settings.setValue("directory", self.dirEdit.text())
 
     def load(self):
-        self.limitEdit.setValue(int(self.settings.value("limit", 100)))
-        self.dirEdit.setText(self.settings.value("directory", ""))
+        self.limitEdit.setValue(self.set_limit)
+        self.dirEdit.setText(self.set_dir)
 
     def save_and_exit(self):
-        self.save()
-        QMessageBox.information(
-            self, "Info", "Settings saved. Restart to take effect")
+        if (int(self.limitEdit.value()) != self.set_limit) or (self.dirEdit.text() != self.set_dir):
+            self.save()
+            QMessageBox.information(
+                self, "Info", "Settings saved. Restart to take effect")
         self.close()
 
     def __init__(self):
         QWidget.__init__(self)
-
         uic.loadUi(utils.uifile("settings.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.limitEdit.setMaximum(200)
         self.settings = QSettings()
+        self.set_limit = int(self.settings.value("limit", 100))
+        self.set_dir = self.settings.value("directory", "")
         self.load()
         self.buttonBox.rejected.connect(self.close)
         self.buttonBox.accepted.connect(self.save_and_exit)
@@ -104,6 +104,10 @@ class MainWindow(QWidget):
         self.current_index = 0
         query = self.queryEdit.text()
         has_dicts = bool(utils.get_dicts(self.settings_dir))
+        if not query:
+            QMessageBox.warning(
+                self, "Warning", "Please enter something valid")
+            return
         if not has_dicts:
             QMessageBox.warning(
                 self, "Warning", "No dictionaries detected. Please set a valid folder in settings")
@@ -137,9 +141,12 @@ class MainWindow(QWidget):
 
     def on_entry_selection(self):
         item = self.wordList.currentRow()
-        if item is not self.current_index:
+        if item != self.current_index:
             self.webView.load(QUrl(f"{address}{self.wordLinks[item]}"))
             self.current_index = item
+            # self.webView.page().mainFrame().findFirstElement("body").setAttribute("onunload", "func()")
+            # self.webView.history().clear()
+            # QWebSettings.clearMemoryCaches()
 
     def on_settingsbutton_clicked(self):
         self.settingsWindow = Settings()
@@ -148,6 +155,7 @@ class MainWindow(QWidget):
     def init_server(self):
         self.thread = threading.Thread(target=server.main, args=(
             self.settings_dir, self.settings_limit, port))
+        self.thread.daemon = True
         self.thread.start()
 
     def __init__(self):
@@ -170,7 +178,6 @@ def main():
     mainwindow = MainWindow()
     mainwindow.show()
     mainwindow.init_server()
-    app.aboutToQuit.connect(server.shutdown)
     app.exec()
 if __name__ == '__main__':
     main()

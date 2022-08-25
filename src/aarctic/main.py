@@ -6,7 +6,7 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QUrl, QSettings, QCoreApplication
 #from PyQt5.QtWebKit import QWebSettings
-#from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 import aarctic.utils as utils
 import aarctic.server as server
 

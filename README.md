@@ -1,6 +1,6 @@
 # aarctic
 
-Simplistic PyQt5 desktop client for [Aard2](https://aarddict.org). 
+Simplistic PyQt5 desktop client of [Aard2](https://aarddict.org). 
 
 ![](screenshot.png)
 

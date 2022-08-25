@@ -4,27 +4,27 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aarctic"
-description = "Simplistic desktop client for Aard2"
+description = "Simplistic desktop client of Aard2"
 authors = [
     {name = "aisuneko", email="iceneko@protonmail.ch"}
 ]
 readme = "README.md"
-#requires-python = ">=3.7"
+requires-python = ">=3.6"
 keywords = ["aard2", "aard", "Aard2", "dictionary", "slob"]
 license = {text = "MIT"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: X11 Applications :: Qt",
-    "Framework :: CherryPy",
+    "Framework :: Bottle",
     "Intended Audience :: Education",
     "License :: OSI Approved :: MIT License",
     "Topic :: Education"
 ]
 dependencies = [
     "pyqt5==5.15.7",
+    "pyqtwebengine",
     "bottle",
     "Slob @ git+https://github.com/itkach/slob.git@master",
-    "requests",
     "importlib_resources"
 ]
 dynamic = ["version"]
@@ -53,7 +53,7 @@ version = {attr = "aarctic.__version__"}
 
 # [tool.briefcase.app.aarctic]
 # formal_name = "aarctic"
-# description = "Simplistic desktop client for Aard2"
+# description = "Simplistic desktop client of Aard2"
 # icon = "src/aarctic/sprites/icon" 
 # sources = ['src/aarctic']
 # requires = ['cherrypy',

@@ -1,7 +1,4 @@
-import json
 import threading
-import urllib.request
-import urllib.error
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QUrl, QSettings, QCoreApplication
@@ -12,13 +9,6 @@ import aarctic.server as server
 
 port = 7036 if utils.debug else utils.find_free_port()
 address = f"http://{utils.INTERFACE}:{port}"
-
-
-def get_data(url):
-    response = urllib.request.urlopen(url)
-    string = response.read().decode('utf-8')
-    data = json.loads(string)
-    return data
 
 
 class WordListEntry(QWidget):
@@ -35,25 +25,11 @@ class About(QWidget):
     def get_dict_info(self):
         settings = QSettings()
         settings_dir = settings.value("directory")
-        has_dicts = bool(utils.get_dicts(settings_dir))
-        if not has_dicts:
-            self.dictInfoView.setText(
-                "No dictionaries detected. Please set a valid folder in settings")
-            return
-        try:
-            data = get_data(f"{address}/slob")
-        except urllib.error.URLError:
-            self.dictInfoView.setText(
-                "ERROR: Could not communicate with local server")
-        except json.decoder.JSONDecodeError:
-            self.dictInfoView.setText(
-                "ERROR: Failed to parse data from local server")
+        code, data = utils.server_parser(f"{address}/slob", settings_dir)
+        if code:
+            self.dictInfoView.setText(data)
         else:
-            if has_dicts and not data:
-                self.dictInfoView.setText(
-                    "ERROR: Server failed to load dictionaries")
-            else:
-                self.dictInfoView.setText(utils.build_dicts_info(data))
+            self.dictInfoView.setText(utils.build_dicts_info(data))
 
     def __init__(self):
         QWidget.__init__(self)
@@ -114,40 +90,27 @@ class MainWindow(QWidget):
     def on_button_clicked(self):
         self.current_index = 0
         query = self.queryEdit.text()
-        has_dicts = bool(utils.get_dicts(self.settings_dir))
-        if not has_dicts:
-            QMessageBox.warning(
-                self, "Warning", "No dictionaries found. Please set a valid folder in settings")
-            return
         if not query:
-            QMessageBox.warning(
-                self, "Warning", "Please enter something valid")
+            QMessageBox.warning(self, "Warning", "Please enter something")
             return
-        try:
-            data = get_data(f"{address}/lookup?word={query}")
-        except urllib.error.URLError:
-            QMessageBox.critical(
-                self, "Error", "Could not communicate with local server")
-        except json.decoder.JSONDecodeError:
-            QMessageBox.critical(
-                self, "Error", "Error parsing data from local server")
+        code, data = utils.server_parser(
+            f"{address}/lookup?word={query}", self.settings_dir)
+        if code == 1:
+            QMessageBox.critical(self, "Error", data)
+        elif code == 2:
+            QMessageBox.warning(self, "Warning", data)
         else:
-            if has_dicts and not data:
-                QMessageBox.warning(
-                    self, "Warning", "No results returned. Please refine your search")
-            else:
-                if data:
-                    self.webView.load(QUrl(f"{address}{data[0]['link']}"))
-                self.wordList.clear()
-                self.wordLinks.clear()
-                for i in data:
-                    item = QListWidgetItem(self.wordList)
-                    self.wordList.addItem(item)
-                    row = WordListEntry(i['key'], i['source'])
-                    item.setSizeHint(row.minimumSizeHint())
-                    item.setToolTip(f"\"{i['key']}\" from {i['source']}")
-                    self.wordList.setItemWidget(item, row)
-                    self.wordLinks.append(i['link'])
+            self.webView.load(QUrl(f"{address}{data[0]['link']}"))
+            self.wordList.clear()
+            self.wordLinks.clear()
+            for i in data:
+                item = QListWidgetItem(self.wordList)
+                self.wordList.addItem(item)
+                row = WordListEntry(i['key'], i['source'])
+                item.setSizeHint(row.minimumSizeHint())
+                item.setToolTip(f"\"{i['key']}\" from {i['source']}")
+                self.wordList.setItemWidget(item, row)
+                self.wordLinks.append(i['link'])
 
     def on_entry_selection(self):
         item = self.wordList.currentRow()

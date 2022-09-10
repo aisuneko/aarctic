@@ -2,7 +2,7 @@ import threading
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QUrl, QSettings, QCoreApplication
-#from PyQt5.QtWebKit import QWebSettings
+from PyQt5.QtNetwork import QNetworkDiskCache
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 import aarctic.utils as utils
 import aarctic.server as server
@@ -37,7 +37,7 @@ class About(QWidget):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.buttonBox.button(QDialogButtonBox.Close).setDefault(True)
         self.buttonBox.button(QDialogButtonBox.Close).setFocus()
-        self.buttonBox.rejected.connect(self.close)
+        self.buttonBox.rejected.connect(self.deleteLater)
         self.get_dict_info()
 
 
@@ -65,7 +65,8 @@ class Settings(QWidget):
             self.save()
             QMessageBox.information(
                 self, "Info", "Settings saved. Restart to take effect")
-        self.close()
+        # self.close()
+        self.deleteLater()
 
     def __init__(self):
         QWidget.__init__(self)
@@ -76,7 +77,7 @@ class Settings(QWidget):
         self.set_limit = int(self.settings.value("limit", 100))
         self.set_dir = self.settings.value("directory", "")
         self.load()
-        self.buttonBox.rejected.connect(self.close)
+        self.buttonBox.rejected.connect(self.deleteLater)
         self.buttonBox.accepted.connect(self.save_and_exit)
         self.browseButton.clicked.connect(self.on_browsebutton_clicked)
         self.aboutButton.clicked.connect(self.on_aboutbutton_clicked)
@@ -135,6 +136,7 @@ class MainWindow(QWidget):
         QWidget.__init__(self)
         uic.loadUi(utils.uifile("main.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.destroyed.connect(QApplication.quit)
         self.searchButton.clicked.connect(self.on_button_clicked)
         self.settingsButton.clicked.connect(self.on_settingsbutton_clicked)
         self.wordList.itemPressed.connect(self.on_entry_selection)
@@ -142,6 +144,9 @@ class MainWindow(QWidget):
         self.settings = QSettings()
         self.settings_dir = self.settings.value("directory")
         self.settings_limit = int(self.settings.value("limit", 100))
+        self.cache = QNetworkDiskCache()
+        self.cache.setCacheDirectory(".aarctic_cache")
+        self.webView.page().networkAccessManager().setCache(self.cache)
 
 
 def main():
